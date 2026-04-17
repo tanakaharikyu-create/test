@@ -1,0 +1,488 @@
+/* style.css — 天神3丁目プロジェクト 不動産経営シミュレーター */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green:  #4CAF50;
+  --yellow: #FFC107;
+  --red:    #F44336;
+  --blue:   #2196F3;
+  --bg:     #f4f6f9;
+  --card:   #ffffff;
+  --border: #e0e0e0;
+  --text:   #212121;
+  --muted:  #757575;
+  --font:   system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+}
+
+body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; min-width: 1024px; }
+
+/* ── Header ── */
+header {
+  background: #1a237e;
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+header h1 { font-size: 18px; font-weight: 700; white-space: nowrap; }
+.set-toggle { display: flex; gap: 0; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.4); }
+.set-toggle label {
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+  color: rgba(255,255,255,0.75);
+}
+.set-toggle input[type="radio"] { display: none; }
+.set-toggle input[type="radio"]:checked + label { background: rgba(255,255,255,0.25); color: #fff; }
+
+/* ── Layout ── */
+.main-layout { display: flex; gap: 0; min-height: calc(100vh - 54px); }
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  overflow-y: auto;
+}
+.content { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Section Card ── */
+.section-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+/* ── Sidebar Params ── */
+.param-group { margin-bottom: 14px; }
+.param-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.param-row { display: flex; align-items: center; gap: 8px; }
+.param-row input[type="range"] { flex: 1; }
+.param-row input[type="number"] { width: 72px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; text-align: right; }
+.param-display { font-size: 14px; font-weight: 700; color: var(--blue); min-width: 52px; text-align: right; }
+select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; width: 100%; }
+.method-toggle { display: flex; gap: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); margin-top: 4px; }
+.method-toggle label { flex: 1; text-align: center; padding: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: #f5f5f5; color: var(--muted); }
+.method-toggle input[type="radio"] { display: none; }
+.method-toggle input[type="radio"]:checked + label { background: var(--blue); color: #fff; }
+.input-direct { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; }
+.info-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); padding: 2px 0; }
+.info-row span:last-child { font-weight: 600; color: var(--text); }
+.sidebar-section-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin: 14px 0 8px; border-top: 1px solid var(--border); padding-top: 12px; }
+
+/* ── Signal Dashboard ── */
+.signal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.signal-card {
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: background 0.3s, border-color 0.3s;
+}
+.signal-card.signal-green  { background: #e8f5e9; border-color: var(--green); }
+.signal-card.signal-yellow { background: #fff8e1; border-color: var(--yellow); }
+.signal-card.signal-red    { background: #ffebee; border-color: var(--red); }
+.signal-label { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.signal-value { font-size: 22px; font-weight: 800; }
+.signal-green  .signal-value { color: var(--green); }
+.signal-yellow .signal-value { color: #e65100; }
+.signal-red    .signal-value { color: var(--red); }
+.signal-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── Table ── */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+th { background: #f5f5f5; font-weight: 700; font-size: 12px; color: var(--muted); }
+td:first-child, th:first-child { text-align: left; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f9f9f9; }
+.total-row td { background: #f0f4ff; font-weight: 700; }
+.neg { color: var(--red); font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+/* ── Summary Table ── */
+.summary-table th:not(:first-child) { text-align: center; }
+.summary-table td:not(:first-child) { text-align: right; }
+.summary-table .row-label { font-weight: 600; color: var(--text); }
+.highlight-row td { background: #fffde7; font-weight: 700; }
+
+/* ── Scenario Table ── */
+.scenario-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+
+/* ── Graphs ── */
+.tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 12px; }
+.tab-btn {
+  padding: 8px 18px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.chart-container { position: relative; height: 280px; }
+
+/* ── Main Tab Bar ── */
+.main-tab-bar {
+  display: flex;
+  background: #0d1b6b;
+  border-bottom: 2px solid #1a237e;
+  padding: 0 20px;
+}
+.main-tab-btn {
+  padding: 10px 24px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.main-tab-btn.active { color: #fff; border-bottom-color: #64B5F6; }
+.main-tab-btn:hover:not(.active) { color: rgba(255,255,255,0.85); }
+.main-tab-content { display: none; }
+.main-tab-content.active { display: block; }
+
+/* ── Phase 2 — 3本の矢 ── */
+.arrows-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1400px;
+}
+.signal-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.arrows-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.arrows-input-grid .section-card { margin: 0; }
+.param-sub-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: 14px 0 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.calc-result-box {
+  background: #f0f4ff;
+  border: 1px solid #c5cae9;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+.calc-result-box .info-row { padding: 3px 0; }
+.calc-result-box .info-row.highlight span:last-child {
+  font-size: 15px;
+  color: #1a237e;
+}
+.reverse-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.reverse-cell {
+  background: #f9f9f9;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.reverse-cell .r-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.reverse-cell .r-value { font-size: 20px; font-weight: 800; color: #1a237e; }
+.reverse-cell .r-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── Rent Table ── */
+.collapsible-header {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+.collapsible-body { display: none; margin-top: 12px; }
+.collapsible-body.open { display: block; }
+.chevron { transition: transform 0.2s; }
+.chevron.open { transform: rotate(180deg); }
+
+/* ── ガイドボタン ── */
+.guide-btn {
+  margin-left: auto;
+  background: #f0f0f0;
+  color: #212121;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.guide-btn:hover { background: #e0e0e0; }
+
+/* ── ガイドオーバーレイ ── */
+#guide-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+#guide-overlay.open { display: block; }
+
+/* ── ガイドサイドパネル ── */
+#guide-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+#guide-panel.open { transform: translateX(0); }
+
+.guide-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+.guide-panel-header h2 { font-size: 16px; margin: 0; }
+
+.guide-close-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #555;
+  padding: 0 4px;
+  line-height: 1;
+}
+.guide-close-btn:hover { color: #000; }
+
+.guide-panel-body {
+  overflow-y: auto;
+  padding: 24px;
+  flex: 1;
+}
+.guide-panel-body h3 {
+  font-size: 14px;
+  margin: 20px 0 10px;
+  color: #1a237e;
+}
+.guide-panel-body h3:first-child { margin-top: 0; }
+.guide-panel-body p { font-size: 13px; line-height: 1.6; margin: 6px 0; color: #333; }
+.guide-panel-body ul,
+.guide-panel-body ol { padding-left: 20px; font-size: 13px; line-height: 1.7; color: #333; }
+
+.guide-formula {
+  background: #f8f9fa;
+  border-left: 4px solid #4CAF50;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 0 4px 4px 0;
+}
+
+.guide-steps { margin: 12px 0; }
+.guide-step {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.guide-step > div { flex: 1; }
+.guide-step strong { font-size: 13px; }
+.guide-step p { margin: 4px 0 0; font-size: 12px; color: #555; }
+
+.step-num {
+  background: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.guide-highlight {
+  background: #FFF3E0;
+  border-left: 4px solid #FFC107;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-size: 14px;
+  border-radius: 0 4px 4px 0;
+}
+
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 12px 0;
+}
+.guide-table th {
+  background: #f5f5f5;
+  padding: 8px;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+}
+.guide-table td { padding: 8px; border-bottom: 1px solid #eee; }
+
+.guide-effects { margin: 12px 0; }
+.guide-effect {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+.guide-effect strong { font-size: 13px; display: block; margin-bottom: 4px; }
+.guide-effect p { margin: 0; font-size: 12px; color: #555; }
+
+.guide-summary {
+  background: #E3F2FD;
+  border-left: 4px solid #2196F3;
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ── Phase X ガイド（真紀子さん向け） ── */
+.phasex-guide {
+  margin: 12px 0 16px;
+  border: 1px solid #cfe6ff;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fbff;
+}
+.phasex-guide > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 14px;
+  background: #eef6ff;
+  list-style: none;
+  user-select: none;
+}
+.phasex-guide > summary::-webkit-details-marker { display: none; }
+.phasex-guide > summary::before { content: '▶ '; font-size: 11px; }
+.phasex-guide[open] > summary::before { content: '▼ '; }
+.phasex-guide > summary:hover { background: #ddeeff; }
+.phasex-guide > *:not(summary) { padding: 0 16px; }
+.phasex-guide > summary + * { margin-top: 12px; }
+.phasex-guide > *:last-child { padding-bottom: 16px; }
+.phasex-guide h4 { margin: 12px 0 5px; font-size: 13px; color: #1a237e; }
+.phasex-guide ul { margin: 4px 0 10px 18px; font-size: 12px; line-height: 1.75; color: #333; }
+.phasex-guide code {
+  background: #e8eaf6;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #1a237e;
+}
+.guide-callout {
+  background: #eef6ff;
+  border: 1px solid #cfe6ff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #333;
+}
+
+/* ── Phase X 思想パネル ── */
+.phasex-philosophy {
+  margin: 8px 0 16px;
+  border: 1px solid #ffe0b2;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fffdf8;
+}
+.phasex-philosophy > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 14px;
+  background: #fff3e0;
+  list-style: none;
+  user-select: none;
+  color: #E65100;
+}
+.phasex-philosophy > summary::-webkit-details-marker { display: none; }
+.phasex-philosophy > summary::before { content: '▶ '; font-size: 11px; }
+.phasex-philosophy[open] > summary::before { content: '▼ '; }
+.phasex-philosophy > summary:hover { background: #ffe0b2; }
+.phasex-philosophy > *:not(summary) { padding: 0 16px; }
+.phasex-philosophy > summary + * { margin-top: 12px; }
+.phasex-philosophy > *:last-child { padding-bottom: 16px; }
+.phasex-philosophy h4 { margin: 12px 0 5px; font-size: 13px; color: #BF360C; }
+.phasex-philosophy ul,
+.phasex-philosophy ol { margin: 4px 0 10px 18px; font-size: 12px; line-height: 1.75; color: #333; }
+.phasex-philosophy p  { font-size: 12px; color: #444; }
+.phasex-philosophy code {
+  background: #fce4ec;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #880E4F;
+}
+.philosophy-callout {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #333;
+}

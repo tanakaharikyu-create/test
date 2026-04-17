@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天神3丁目プロジェクト — 不動産経営シミュレーター</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ██ HEADER ████████████████████████████████████████ -->
+<header>
+  <h1>🏢 天神3丁目プロジェクト — 不動産経営シミュレーター</h1>
+  <div class="set-toggle">
+    <input type="radio" name="set-toggle" id="set-a" value="A" checked>
+    <label for="set-a">実質ベース (A)</label>
+    <input type="radio" name="set-toggle" id="set-b" value="B">
+    <label for="set-b">銀行提出用 (B)</label>
+  </div>
+  <button class="guide-btn" id="guide-open-btn">❓ ガイド</button>
+</header>
+
+<!-- ██ MAIN TAB BAR ██████████████████████████████████ -->
+<div class="main-tab-bar">
+  <button class="main-tab-btn active" data-maintab="main-tab-building">🏢 ビル収支</button>
+  <button class="main-tab-btn" data-maintab="main-tab-arrows">🏹 3本の矢</button>
+  <button class="main-tab-btn" data-maintab="main-tab-makiko">🏡 真紀子CF</button>
+  <button class="main-tab-btn" data-maintab="main-tab-phasex">💰 資金繰り</button>
+</div>
+
+<!-- ██ PHASE 1 — ビル収支 ████████████████████████████ -->
+<div id="main-tab-building" class="main-tab-content active">
+<div class="main-layout">
+
+  <!-- ██ SIDEBAR — 入力パラメータ ████████████████████ -->
+  <aside class="sidebar">
+
+    <div class="sidebar-section-title">変動パラメータ</div>
+
+    <!-- 金利 -->
+    <div class="param-group">
+      <div class="param-label">金利（%年利）</div>
+      <div class="param-row">
+        <input type="range" id="rate-slider" min="0.5" max="5.0" step="0.1" value="2.0">
+        <span class="param-display" id="rate-display">2.0%</span>
+      </div>
+      <div class="param-row" style="justify-content:flex-end;margin-top:4px;">
+        <input type="number" id="rate-input" min="0.5" max="5.0" step="0.1" value="2.0">
+      </div>
+    </div>
+
+    <!-- 返済年数 -->
+    <div class="param-group">
+      <div class="param-label">返済年数</div>
+      <select id="years-select">
+        <option value="15">15年</option>
+        <option value="20">20年</option>
+        <option value="25">25年</option>
+        <option value="30">30年</option>
+        <option value="35" selected>35年</option>
+        <option value="40">40年</option>
+      </select>
+    </div>
+
+    <!-- 返済方式 -->
+    <div class="param-group">
+      <div class="param-label">返済方式</div>
+      <div class="method-toggle">
+        <input type="radio" name="method-toggle" id="method-ep" value="equal_payment" checked>
+        <label for="method-ep">元利均等</label>
+        <input type="radio" name="method-toggle" id="method-eq" value="equal_principal">
+        <label for="method-eq">元金均等</label>
+      </div>
+    </div>
+
+    <!-- 空室率 -->
+    <div class="param-group">
+      <div class="param-label">空室率（%）</div>
+      <div class="param-row">
+        <input type="range" id="vac-slider" min="0" max="30" step="1" value="0">
+        <span class="param-display" id="vac-display">0%</span>
+      </div>
+      <div class="param-row" style="justify-content:flex-end;margin-top:4px;">
+        <input type="number" id="vac-input" min="0" max="30" step="1" value="0">
+      </div>
+    </div>
+
+    <!-- 賃料下落率 -->
+    <div class="param-group">
+      <div class="param-label">賃料下落率（%/年）</div>
+      <div class="param-row">
+        <input type="range" id="decline-slider" min="0" max="2.0" step="0.1" value="0">
+        <span class="param-display" id="decline-display">0.0%</span>
+      </div>
+      <div class="param-row" style="justify-content:flex-end;margin-top:4px;">
+        <input type="number" id="decline-input" min="0" max="2.0" step="0.1" value="0">
+      </div>
+    </div>
+
+    <div class="sidebar-section-title">固定パラメータ（編集可）</div>
+
+    <!-- 総借入額 -->
+    <div class="param-group">
+      <div class="param-label">総借入額（円）</div>
+      <input type="number" class="input-direct" id="loan-input" value="456900000" step="1000000">
+      <div class="info-row" style="margin-top:4px;">
+        <span>表示</span><span id="loan-display">¥456,900,000</span>
+      </div>
+    </div>
+
+    <!-- 固定資産税 -->
+    <div class="param-group">
+      <div class="param-label">固定資産税（年額・円）</div>
+      <input type="number" class="input-direct" id="tax-input" value="5100000" step="100000">
+    </div>
+
+    <div class="sidebar-section-title">建設費内訳（参考）</div>
+
+    <!-- 建設費スライダー -->
+    <div class="param-group">
+      <div class="param-label">建設費（円）</div>
+      <input type="range" id="const-slider"
+        min="300000000" max="450000000" step="5000000" value="350000000">
+      <div class="info-row" style="margin-top:4px;">
+        <span>建設費</span><span id="const-cost-display">¥350,000,000</span>
+      </div>
+      <div class="info-row"><span>消費税（10%）</span><span id="tax-display">¥35,000,000</span></div>
+      <div class="info-row"><span>設計費</span><span>¥35,000,000</span></div>
+      <div class="info-row"><span>解体費</span><span>¥15,000,000</span></div>
+      <div class="info-row"><span>リノベ</span><span>¥1,500,000</span></div>
+      <div class="info-row" style="font-weight:700;border-top:1px solid #eee;padding-top:4px;margin-top:4px;">
+        <span>建築費合計</span><span id="building-total-display">¥421,000,000</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ██ MAIN CONTENT ██████████████████████████████████ -->
+  <main class="content">
+
+    <!-- ① 信号機ダッシュボード -->
+    <div class="section-card">
+      <div class="section-title">📊 収支ダッシュボード</div>
+      <div class="signal-grid">
+        <div class="signal-card signal-green" id="card-monthly-cf">
+          <div class="signal-label">月次キャッシュフロー（初月）</div>
+          <div class="signal-value">—</div>
+          <div class="signal-sub">🟢 &gt;20万 / 🟡 0〜20万 / 🔴 &lt;0</div>
+        </div>
+        <div class="signal-card signal-green" id="card-vacancy">
+          <div class="signal-label">空室率</div>
+          <div class="signal-value">0%</div>
+          <div class="signal-sub">🟢 &lt;10% / 🟡 10〜25% / 🔴 &gt;25%</div>
+        </div>
+        <div class="signal-card signal-green" id="card-annual-net">
+          <div class="signal-label">年間純収支（初月×12−固定資産税）</div>
+          <div class="signal-value">—</div>
+          <div class="signal-sub">🟢 &gt;0 / 🟡 ▲200万〜0 / 🔴 &lt;▲200万</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 収支サマリーテーブル -->
+    <div class="section-card">
+      <div class="section-title">💴 収支サマリー（元利均等 vs 元金均等）</div>
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th>元利均等</th>
+            <th>元金均等（初月）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">月額返済（初月）</td>
+            <td id="ep-payment">—</td>
+            <td id="eq-payment">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">　うち元本</td>
+            <td>—</td>
+            <td id="eq-principal">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">　うち利息（初月）</td>
+            <td>—</td>
+            <td id="eq-interest">—</td>
+          </tr>
+          <tr class="highlight-row">
+            <td class="row-label">月次CF（初月）</td>
+            <td id="ep-monthly-cf">—</td>
+            <td id="eq-monthly-cf">—</td>
+          </tr>
+          <tr class="highlight-row">
+            <td class="row-label">年間純収支（初月×12−固資税）</td>
+            <td id="ep-annual">—</td>
+            <td id="eq-annual">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">利息総額（返済期間）</td>
+            <td id="ep-total-int">—</td>
+            <td id="eq-total-int">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">総支払額</td>
+            <td id="ep-total-pay">—</td>
+            <td id="eq-total-pay">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">売却価格（5%利回り想定）</td>
+            <td id="sale-price-5">—</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td class="row-label">売却価格（7%利回り想定）</td>
+            <td id="sale-price-7">—</td>
+            <td>—</td>
+          </tr>
+          <tr class="highlight-row">
+            <td class="row-label">売却利益（5%利回り−借入残）</td>
+            <td id="sale-profit">—</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ③ 3シナリオ比較 -->
+    <div class="section-card">
+      <div class="section-title">🔀 3シナリオ比較</div>
+      <table>
+        <thead>
+          <tr>
+            <th>シナリオ</th>
+            <th>金利</th>
+            <th>空室率</th>
+            <th>賃料</th>
+            <th>月次CF</th>
+            <th>年間純収支</th>
+            <th>35年累積CF</th>
+          </tr>
+        </thead>
+        <tbody id="scenario-table-body">
+          <tr><td colspan="7" style="text-align:center;color:#999;">計算中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ④ グラフエリア -->
+    <div class="section-card">
+      <div class="section-title">📈 グラフ</div>
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-repayment">返済方式比較</button>
+        <button class="tab-btn" data-tab="tab-cf">年間CF推移（40年）</button>
+      </div>
+      <div class="tab-panel active" id="tab-repayment">
+        <div class="chart-container">
+          <canvas id="repaymentChart"></canvas>
+        </div>
+        <p style="font-size:11px;color:#999;margin-top:6px;text-align:center;">
+          🔴我慢ゾーン（元金均等が高い期間）→ 交差点 → 🟢楽になるゾーン（元金均等が有利）
+        </p>
+      </div>
+      <div class="tab-panel" id="tab-cf">
+        <div class="chart-container">
+          <canvas id="cfChart"></canvas>
+        </div>
+        <p style="font-size:11px;color:#999;margin-top:6px;text-align:center;">
+          36年目以降は返済終了 → 賃料収入−経費−固定資産税のみ
+        </p>
+      </div>
+    </div>
+
+    <!-- ⑤ 賃料明細テーブル（折り畳み） -->
+    <div class="section-card">
+      <div class="collapsible-header" onclick="toggleRentTable()">
+        <div class="section-title" style="margin:0;border:none;padding:0;">🏠 賃料明細テーブル</div>
+        <span class="chevron" id="rent-chevron">▼</span>
+      </div>
+      <div class="collapsible-body" id="rent-body">
+        <table style="margin-top:12px;">
+          <thead>
+            <tr>
+              <th>部屋</th><th>階</th><th>坪数</th>
+              <th>賃料</th><th>共益費</th><th>消費税</th><th>合計</th>
+            </tr>
+          </thead>
+          <tbody id="rent-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /.main-layout -->
+</div><!-- /#main-tab-building -->
+
+<!-- ██ PHASE 2 — 3本の矢 █████████████████████████████ -->
+<div id="main-tab-arrows" class="main-tab-content">
+<div class="arrows-content">
+
+  <!-- ① 統合信号機 -->
+  <div class="section-card">
+    <div class="section-title">🎯 3本の矢 — 統合ダッシュボード</div>
+    <div class="signal-grid signal-grid-4">
+      <div class="signal-card signal-green" id="s2-card-arrow1">
+        <div class="signal-label">矢① ビル月次CF</div>
+        <div class="signal-value" id="s2-arrow1-val">—</div>
+        <div class="signal-sub">COMPASS不動産 🟢&gt;20万 🟡&gt;0 🔴&lt;0</div>
+      </div>
+      <div class="signal-card signal-green" id="s2-card-arrow2">
+        <div class="signal-label">矢② 鍼灸院月次CF</div>
+        <div class="signal-value" id="s2-arrow2-val">—</div>
+        <div class="signal-sub">天神3丁目鍼灸院 🟢&gt;50万 🟡&gt;0 🔴&lt;0</div>
+      </div>
+      <div class="signal-card signal-yellow" id="s2-card-arrow3">
+        <div class="signal-label">矢③ kintone月収</div>
+        <div class="signal-value" id="s2-arrow3-val">—</div>
+        <div class="signal-sub">外販収入 🟢&gt;30万 🟡&gt;0 🔴&lt;0</div>
+      </div>
+      <div class="signal-card signal-green" id="s2-card-combined">
+        <div class="signal-label">3矢合計 月次CF</div>
+        <div class="signal-value" id="s2-combined-val">—</div>
+        <div class="signal-sub">🟢&gt;100万 / 🟡&gt;0 / 🔴&lt;0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 入力パネル -->
+  <div class="arrows-input-grid">
+
+    <!-- 矢② 鍼灸院 -->
+    <div class="section-card">
+      <div class="section-title">🏥 矢② 鍼灸院パラメータ</div>
+
+      <div class="param-group">
+        <div class="param-label">施術単価（円）</div>
+        <div class="param-row">
+          <input type="range" id="s2-price-sl" min="3000" max="10000" step="500" value="6000">
+          <span class="param-display" id="s2-price-disp">¥6,000</span>
+        </div>
+        <div class="param-row" style="justify-content:flex-end;margin-top:4px;">
+          <input type="number" id="s2-price-in" min="3000" max="10000" step="500" value="6000">
+        </div>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">1日患者数（人/日）</div>
+        <div class="param-row">
+          <input type="range" id="s2-q-sl" min="5" max="60" step="1" value="25">
+          <span class="param-display" id="s2-q-disp">25人</span>
+        </div>
+        <div class="param-row" style="justify-content:flex-end;margin-top:4px;">
+          <input type="number" id="s2-q-in" min="5" max="60" step="1" value="25">
+        </div>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">稼働日数（日/月）</div>
+        <div class="param-row">
+          <input type="range" id="s2-days-sl" min="15" max="30" step="1" value="25">
+          <span class="param-display" id="s2-days-disp">25日</span>
+        </div>
+        <div class="param-row" style="justify-content:flex-end;margin-top:4px;">
+          <input type="number" id="s2-days-in" min="15" max="30" step="1" value="25">
+        </div>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">スタッフ費（円/月）</div>
+        <input type="number" class="input-direct" id="s2-staff-in" value="1500000" step="50000">
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">その他経費（円/月）</div>
+        <input type="number" class="input-direct" id="s2-misc-in" value="300000" step="10000">
+      </div>
+
+      <div class="param-group">
+        <div class="param-label" style="color:#e65100;font-weight:600;">消費税積立（円/月）</div>
+        <input type="number" class="input-direct" id="s2-vat-reserve-in" value="200000" step="10000">
+      </div>
+
+      <div class="param-group">
+        <div class="param-label" style="color:#e65100;font-weight:600;">消費税支払い ①</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+          <select id="s2-vat-month1-sel" style="width:60px;padding:3px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+            <option value="1">1月</option><option value="2">2月</option><option value="3" selected>3月</option>
+            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+          <input type="number" id="s2-vat-amount1-in" value="1200000" step="100000"
+            style="flex:1;padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+        </div>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label" style="color:#e65100;font-weight:600;">消費税支払い ②</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+          <select id="s2-vat-month2-sel" style="width:60px;padding:3px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+            <option value="7">7月</option><option value="8">8月</option><option value="9" selected>9月</option>
+            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+          <input type="number" id="s2-vat-amount2-in" value="1200000" step="100000"
+            style="flex:1;padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+        </div>
+      </div>
+
+      <div class="calc-result-box">
+        <div class="info-row highlight">
+          <span>月次施術収益</span><span id="disp2-revenue"><strong>—</strong></span>
+        </div>
+        <div class="info-row">
+          <span>701号室家賃（7F入居）</span><span id="disp2-rent701">—</span>
+        </div>
+        <div class="info-row">
+          <span>内装ローン月額（20M 2% 10年）</span><span id="disp2-loan">—</span>
+        </div>
+        <div class="info-row" style="color:#e65100;">
+          <span>消費税負担（積立＋支払按分）</span><span id="disp2-vat">—</span>
+        </div>
+        <div class="info-row highlight" style="border-top:1px solid #c5cae9;padding-top:6px;margin-top:4px;">
+          <span><strong>月次純CF</strong></span>
+          <span><strong id="disp2-cf">—</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 矢③ kintone + 給与設計 -->
+    <div class="section-card">
+      <div class="section-title">💻 矢③ kintone外販</div>
+
+      <table class="summary-table" style="font-size:12px;margin-bottom:8px;">
+        <thead>
+          <tr><th>プラン</th><th>月額単価</th><th style="min-width:130px;">社数</th><th>月収</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label" style="white-space:nowrap;">A FC</td>
+            <td><input type="number" id="ka-price" value="50000" min="10000" max="100000" step="5000" style="width:78px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;"></td>
+            <td style="white-space:nowrap;">
+              <input type="range"  id="ka-cl-sl" min="0" max="20" step="1" value="0" style="width:70px;vertical-align:middle;">
+              <input type="number" id="ka-cl-in" min="0" max="20" value="0" style="width:38px;padding:2px 3px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;">
+            </td>
+            <td id="ka-revenue" style="color:#1a237e;font-weight:600;">¥0</td>
+          </tr>
+          <tr>
+            <td class="row-label" style="white-space:nowrap;">B BC</td>
+            <td><input type="number" id="kb-price" value="20000" min="5000" max="50000" step="5000" style="width:78px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;"></td>
+            <td style="white-space:nowrap;">
+              <input type="range"  id="kb-cl-sl" min="0" max="30" step="1" value="0" style="width:70px;vertical-align:middle;">
+              <input type="number" id="kb-cl-in" min="0" max="30" value="0" style="width:38px;padding:2px 3px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;">
+            </td>
+            <td id="kb-revenue" style="color:#1a237e;font-weight:600;">¥0</td>
+          </tr>
+          <tr>
+            <td class="row-label" style="white-space:nowrap;">C EC</td>
+            <td><input type="number" id="kc-price" value="10000" min="5000" max="30000" step="1000" style="width:78px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;"></td>
+            <td style="white-space:nowrap;">
+              <input type="range"  id="kc-cl-sl" min="0" max="50" step="1" value="0" style="width:70px;vertical-align:middle;">
+              <input type="number" id="kc-cl-in" min="0" max="50" value="0" style="width:38px;padding:2px 3px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;">
+            </td>
+            <td id="kc-revenue" style="color:#1a237e;font-weight:600;">¥0</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="2"><strong>合計</strong></td>
+            <td id="k-total-clients"><strong>0社</strong></td>
+            <td id="disp3-revenue"><strong>¥0</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="param-sub-title">💰 給与設計</div>
+
+      <table class="summary-table" style="font-size:12px;">
+        <thead>
+          <tr><th>氏名</th><th>鍼灸院報酬</th><th>COMPASS報酬</th><th>合計</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">真紀子</td>
+            <td><input type="number" id="s2-makiko-clinic-in"   value="100000" step="10000" style="width:90px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;"></td>
+            <td><input type="number" id="s2-makiko-compass-in"  value="300000" step="10000" style="width:90px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;"></td>
+            <td id="sal-makiko-tot" style="font-weight:700;">—</td>
+          </tr>
+          <tr>
+            <td class="row-label">彰宏</td>
+            <td><input type="number" id="s2-akihiro-clinic-in"  value="400000" step="10000" style="width:90px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;"></td>
+            <td><input type="number" id="s2-akihiro-compass-in" value="100000" step="10000" style="width:90px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:12px;text-align:right;"></td>
+            <td id="sal-akihiro-tot" style="font-weight:700;">—</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="calc-result-box" style="margin-top:8px;">
+        <div class="info-row highlight">
+          <span><strong>家族手取り合計/月</strong></span>
+          <span><strong id="sum-sal-total">—</strong></span>
+        </div>
+        <div class="info-row">
+          <span>年換算</span><span id="sum-sal-annual">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 逆算パネル -->
+  <div class="section-card">
+    <div class="section-title">🔢 逆算パネル — 目標CF達成に必要な要件</div>
+
+    <div class="param-group" style="max-width:480px;">
+      <div class="param-label">目標合計月次CF（円）</div>
+      <div class="param-row">
+        <input type="range" id="s2-target-sl" min="0" max="5000000" step="100000" value="3000000">
+        <span class="param-display" id="disp-target">¥3,000,000</span>
+      </div>
+    </div>
+
+    <div class="reverse-grid">
+      <div class="reverse-cell">
+        <div class="r-label">目標月次CF</div>
+        <div class="r-value" id="rev-target-disp">—</div>
+        <div class="r-sub">設定値</div>
+      </div>
+      <div class="reverse-cell">
+        <div class="r-label">矢②で達成するには</div>
+        <div class="r-value" id="rev-needed-q">—</div>
+        <div class="r-sub">1日の必要患者数</div>
+      </div>
+      <div class="reverse-cell">
+        <div class="r-label">矢③で達成するには</div>
+        <div class="r-value" id="rev-needed-clients">—</div>
+        <div class="r-sub">必要kintoneクライアント</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;padding:10px 14px;background:#f5f5f5;border-radius:6px;">
+      <span style="font-size:12px;color:var(--muted);font-weight:600;">現在の3矢合計 vs 目標：</span>
+      <span id="rev-gap" style="margin-left:8px;font-size:14px;">—</span>
+    </div>
+  </div>
+
+  <!-- ④ 2社収支サマリー -->
+  <div class="section-card">
+    <div class="section-title">📊 2社収支サマリー（月次・給与設計後）</div>
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>項目</th>
+          <th>COMPASS不動産</th>
+          <th>天神3丁目鍼灸院</th>
+          <th>kintone外販</th>
+          <th>田中家合計</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">月次収益</td>
+          <td id="sum-b-rent">—</td>
+          <td id="sum-c-revenue">—</td>
+          <td id="sum-k-revenue">—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="row-label">建物経費 / スタッフ人件費</td>
+          <td id="sum-b-expenses">—</td>
+          <td id="sum-c-staff">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="row-label">返済額</td>
+          <td id="sum-b-loan">—</td>
+          <td id="sum-c-loan">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="row-label">701号室家賃（7F入居）</td>
+          <td>—</td>
+          <td id="sum-c-rent701">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="row-label">固資税＋地代（月） / その他経費</td>
+          <td id="sum-b-proptax">—</td>
+          <td id="sum-c-misc">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr style="color:#e65100;">
+          <td class="row-label">消費税（積立＋支払按分/月）</td>
+          <td>—</td>
+          <td id="sum-c-vat">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="row-label">役員報酬（COMPASS / 鍼灸院）</td>
+          <td id="sum-b-director">—</td>
+          <td id="sum-c-salary">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="row-label">社保・会社負担（×15%）</td>
+          <td id="sum-b-socins">—</td>
+          <td id="sum-c-socins">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr class="highlight-row">
+          <td class="row-label">月次純CF（役員報酬・社保控除後）</td>
+          <td id="sum-b-cf">—</td>
+          <td id="sum-c-cf">—</td>
+          <td id="sum-k-cf">—</td>
+          <td id="sum-total-cf">—</td>
+        </tr>
+        <tr class="highlight-row" style="background:#e3f2fd;">
+          <td class="row-label">会社留保合計</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td id="sum-retained">—</td>
+        </tr>
+        <tr style="background:#e8f5e9;">
+          <td class="row-label"><strong>家族手取り/月（役員報酬合計）</strong></td>
+          <td id="sum-sal-makiko">—</td>
+          <td id="sum-sal-akihiro">—</td>
+          <td>—</td>
+          <td><strong id="sum-sal-total-b">—</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:6px;">
+      ※ COMPASS固資税＋地代行 = 固定資産税月割（年額÷12）＋ 地代（固都税×倍率÷12）の合計。地代倍率は真紀子CFタブの設定値を参照。社保は役員報酬×15%（会社負担分）。
+      家族手取り行はCOMPASS列=COMPASS報酬計、鍼灸院列=鍼灸院報酬計。
+    </p>
+  </div>
+
+  <!-- ⑤ 40年タイムライン -->
+  <div class="section-card">
+    <div class="section-title">📈 40年タイムライン — 3矢合計年間CF推移</div>
+    <div class="chart-container" style="height:340px;">
+      <canvas id="timelineChart"></canvas>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;">
+      矢②内装ローン完済（10年目）・矢①建築ローン完済（35年目）で段階的にCFが改善
+    </p>
+  </div>
+
+  <!-- ── 空白期間チェックリスト ────────────────────────── -->
+  <div class="section-card" style="border-left:4px solid #FFC107;margin-top:8px;">
+    <div class="section-title" style="color:#e65100;">
+      ⚠️ 建替え〜入居開始（空白期間）は別管理
+      <button onclick="this.closest('.section-card').querySelector('.blank-period-body').classList.toggle('open')"
+        style="float:right;background:none;border:1px solid #ccc;border-radius:4px;padding:2px 10px;font-size:11px;cursor:pointer;color:#555;">
+        詳細 ▾
+      </button>
+    </div>
+    <p style="font-size:12px;color:#555;margin:4px 0 0;">
+      このシミュレーターは<strong>竣工後の定常運転</strong>を前提としています。
+      解体・建設・未入居期間の資金繰りは月次管理表で別途管理してください。
+    </p>
+
+    <div class="blank-period-body" style="display:none;margin-top:12px;">
+      <style>.blank-period-body.open{display:block!important;}</style>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+
+        <!-- 確認事項 -->
+        <div>
+          <p style="font-size:12px;font-weight:700;color:#1a237e;margin-bottom:6px;">📋 確認事項チェックリスト</p>
+
+          <p style="font-size:11px;font-weight:600;color:#555;margin:8px 0 4px;">🏦 銀行・融資</p>
+          <ul style="font-size:11px;color:#333;padding-left:16px;line-height:1.8;margin:0;">
+            <li>つなぎ融資の有無・金利・手数料</li>
+            <li>つなぎ期間中は利息のみ or 元本も？</li>
+            <li>分割実行のルール（出来高・支払期日連動）</li>
+            <li>本融資への切替タイミング（検査済/引渡/入居開始）</li>
+          </ul>
+
+          <p style="font-size:11px;font-weight:600;color:#555;margin:8px 0 4px;">🏗️ 設計・施工</p>
+          <ul style="font-size:11px;color:#333;padding-left:16px;line-height:1.8;margin:0;">
+            <li>設計料の支払スケジュール（契約/基本/実施/監理）</li>
+            <li>工事費の支払スケジュール（着工金/中間金/竣工）</li>
+            <li>工期（月数）と遅延リスク（許認可・地盤・資材）</li>
+          </ul>
+
+          <p style="font-size:11px;font-weight:600;color:#555;margin:8px 0 4px;">🏠 募集・入居</p>
+          <ul style="font-size:11px;color:#333;padding-left:16px;line-height:1.8;margin:0;">
+            <li>竣工前募集の可否</li>
+            <li>想定の未入居期間（月数）</li>
+            <li>フリーレント・広告費・仲介手数料の想定</li>
+          </ul>
+
+          <p style="font-size:11px;font-weight:600;color:#555;margin:8px 0 4px;">💸 空白期間の固定費</p>
+          <ul style="font-size:11px;color:#333;padding-left:16px;line-height:1.8;margin:0;">
+            <li>地代（真紀子へ）</li>
+            <li>既存借入の返済</li>
+            <li>固都税（月割）</li>
+            <li>最低限の人件費</li>
+          </ul>
+        </div>
+
+        <!-- 月次テンプレ -->
+        <div>
+          <p style="font-size:12px;font-weight:700;color:#1a237e;margin-bottom:6px;">📅 月次ToDo（工程テンプレ）</p>
+          <table style="width:100%;font-size:11px;border-collapse:collapse;color:#333;">
+            <tbody>
+              <tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">許認可</td><td style="padding:3px 6px;border-bottom:1px solid #eee;color:#888;">建築確認、消防、その他</td></tr>
+              <tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">設計</td><td style="padding:3px 6px;border-bottom:1px solid #eee;color:#888;">基本/実施/見積調整/VE</td></tr>
+              <tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">契約</td><td style="padding:3px 6px;border-bottom:1px solid #eee;color:#888;">設計/工事請負/融資契約</td></tr>
+              <tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">解体</td><td style="padding:3px 6px;border-bottom:1px solid #eee;color:#888;">見積/近隣/工程/完了</td></tr>
+              <tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">着工</td><td style="padding:3px 6px;border-bottom:1px solid #eee;color:#888;">地鎮祭、着工金、出来高</td></tr>
+              <tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">中間</td><td style="padding:3px 6px;border-bottom:1px solid #eee;color:#888;">上棟、中間金、現場定例</td></tr>
+              <tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">竣工</td><td style="padding:3px 6px;border-bottom:1px solid #eee;color:#888;">検査、竣工金、引渡し</td></tr>
+              <tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">募集</td><td style="padding:3px 6px;border-bottom:1px solid #eee;color:#888;">開始、内覧、契約、FR</td></tr>
+              <tr><td style="padding:3px 6px;">入居開始</td><td style="padding:3px 6px;color:#888;">賃料発生、敷金、保証</td></tr>
+            </tbody>
+          </table>
+
+          <p style="font-size:12px;font-weight:700;color:#1a237e;margin:12px 0 6px;">📊 月次資金繰り表（項目）</p>
+          <table style="width:100%;font-size:11px;border-collapse:collapse;color:#333;">
+            <tbody>
+              <tr style="background:#f5f5f5;"><td colspan="2" style="padding:3px 6px;font-weight:600;">入金</td></tr>
+              <tr><td style="padding:3px 6px 3px 16px;border-bottom:1px solid #eee;" colspan="2">融資実行 / 自己資金 / その他</td></tr>
+              <tr style="background:#f5f5f5;"><td colspan="2" style="padding:3px 6px;font-weight:600;">支出</td></tr>
+              <tr><td style="padding:3px 6px 3px 16px;" colspan="2">設計料 / 解体費 / 工事費（着/中/竣）</td></tr>
+              <tr><td style="padding:3px 6px 3px 16px;" colspan="2">利息（つなぎ/本融資）/ 地代 / 税金</td></tr>
+              <tr><td style="padding:3px 6px 3px 16px;border-bottom:1px solid #eee;" colspan="2">その他固定費</td></tr>
+              <tr style="background:#fff3e0;"><td style="padding:3px 6px;font-weight:600;" colspan="2">期末現金残高（安全ライン: 固定費×2ヶ月）</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div><!-- /grid -->
+
+      <div style="margin-top:12px;padding:8px 12px;background:#E3F2FD;border-left:3px solid #2196F3;font-size:11px;border-radius:0 4px 4px 0;">
+        💡 この表が埋まると「どの月が一番危ないか」「安全ラインを超えるために必要な自己資金やつなぎ枠」が見えてくる。
+      </div>
+    </div><!-- /.blank-period-body -->
+  </div><!-- /.section-card -->
+
+</div><!-- /.arrows-content -->
+</div><!-- /#main-tab-arrows -->
+
+<!-- ██ PHASE 3 — 真紀子個人CF ████████████████████████ -->
+<div id="main-tab-makiko" class="main-tab-content" style="display:none;">
+<div class="arrows-content">
+
+  <h2 style="margin-bottom:1rem;">🏡 真紀子個人CF（土地借入返済）</h2>
+
+  <!-- 信号機 3枚 -->
+  <div class="signal-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.5rem;">
+    <div class="signal-card signal-green" id="p3-card-rent">
+      <div class="signal-label">地代収入（月）</div>
+      <div class="signal-value" id="p3-groundrent-val">—</div>
+    </div>
+    <div class="signal-card signal-yellow" id="p3-card-cf">
+      <div class="signal-label">月次CF（手残り）</div>
+      <div class="signal-value" id="p3-cf-val">—</div>
+    </div>
+    <div class="signal-card signal-red" id="p3-card-balloon">
+      <div class="signal-label">一括返済予定額</div>
+      <div class="signal-value" id="p3-balloon-val">—</div>
+    </div>
+  </div>
+
+  <!-- 入力 ＋ サマリー 2カラム -->
+  <div class="arrows-input-grid" style="margin-bottom:1.5rem;">
+
+    <!-- 左：入力パラメータ -->
+    <div class="card">
+      <div class="card-title">入力パラメータ</div>
+      <table class="summary-table" style="width:100%;">
+        <tbody>
+          <tr>
+            <td>借入残高（円）</td>
+            <td><input type="number" id="p3-balance-in" value="25992000" style="width:130px;"></td>
+          </tr>
+          <tr>
+            <td>月額元本返済（円）</td>
+            <td><input type="number" id="p3-principal-in" value="167000" style="width:130px;"></td>
+          </tr>
+          <tr>
+            <td>金利（%）</td>
+            <td><input type="number" id="p3-rate-in" value="2.525" step="0.001" style="width:130px;"></td>
+          </tr>
+          <tr>
+            <td>返済残年数</td>
+            <td><input type="number" id="p3-years-in" value="8" min="1" max="30" style="width:130px;"></td>
+          </tr>
+          <tr>
+            <td>固都税年額（円）</td>
+            <td><input type="number" id="p3-landtax-in" value="768000" style="width:130px;"></td>
+          </tr>
+          <tr>
+            <td>地代倍率</td>
+            <td>
+              <select id="p3-mult-sel" style="width:130px;">
+                <option value="4">4倍</option>
+                <option value="5">5倍</option>
+                <option value="6" selected>6倍</option>
+                <option value="7">7倍</option>
+                <option value="8">8倍</option>
+                <option value="10">10倍</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:0.75rem;padding:0.5rem;background:#f5f5f5;border-radius:4px;font-size:0.85rem;color:#555;" id="p3-rent-formula">—</div>
+    </div>
+
+    <!-- 右：月次収支サマリー -->
+    <div class="card">
+      <div class="card-title">月次収支サマリー</div>
+      <table class="summary-table" style="width:100%;">
+        <tbody>
+          <tr>
+            <td>地代収入（月）</td>
+            <td class="text-right" id="p3-sum-rent">—</td>
+          </tr>
+          <tr>
+            <td>元本返済</td>
+            <td class="text-right neg" id="p3-sum-principal">—</td>
+          </tr>
+          <tr>
+            <td>利息</td>
+            <td class="text-right neg" id="p3-sum-interest">—</td>
+          </tr>
+          <tr>
+            <td>固都税（月按分）</td>
+            <td class="text-right neg" id="p3-sum-landtax">—</td>
+          </tr>
+          <tr style="font-weight:bold;border-top:2px solid #333;">
+            <td>月次CF</td>
+            <td class="text-right" id="p3-sum-cf">—</td>
+          </tr>
+          <tr style="font-weight:bold;">
+            <td>年間CF</td>
+            <td class="text-right" id="p3-sum-annual">—</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:1rem;">
+        <table class="summary-table" style="width:100%;">
+          <tbody>
+            <tr>
+              <td>COMPASS受取地代（年）</td>
+              <td class="text-right" id="p3-compass-rent">—</td>
+            </tr>
+            <tr>
+              <td>一括返済予定額（〜2034年）</td>
+              <td class="text-right neg" id="p3-balloon-disp">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /.arrows-input-grid -->
+
+  <!-- グラフ -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title">返済タイムライン（年間CF ＋ 借入残高）</div>
+    <div style="height:320px;position:relative;">
+      <canvas id="p3Chart"></canvas>
+    </div>
+  </div>
+
+</div><!-- /.arrows-content -->
+</div><!-- /#main-tab-makiko -->
+
+<!-- ██ PHASE X — CF-STRAC 資金繰りレイヤー ████████████ -->
+<div id="main-tab-phasex" class="main-tab-content" style="display:none;">
+<div class="arrows-content">
+
+  <h2 style="margin-bottom:4px;">💰 CF-STRAC — 資金繰りレイヤー（Phase X）</h2>
+  <p style="font-size:12px;color:#777;margin-bottom:0.8rem;">
+    コア式: <strong>G = MQ − F</strong>　／　<strong>W = U + Z − K</strong>　／　<strong>CF = G − R + W + SS</strong>　／　<strong>C末 = C首 + CF</strong>
+    <br>単位: <strong>万円</strong>（月次）
+  </p>
+
+  <!-- ガイド（真紀子さん向け） -->
+  <details class="phasex-guide">
+    <summary>🧭 ガイド（真紀子さん向け：資金繰りを"見える化"する手順）</summary>
+
+    <div class="guide-callout">
+      ここは「利益が出ているか」ではなく、<b>口座残高が減りすぎないか</b>を見る場所です。<br>
+      入力はむずかしく見えますが、やることは <b>順番に数字を入れていくだけ</b>です。
+    </div>
+
+    <h4>STEP 0：まず見るポイント</h4>
+    <ul>
+      <li><b>月次CF</b>：今月、現金が増えるか減るか</li>
+      <li><b>期末残高</b>：今月末の口座残高</li>
+      <li><b>安全ライン</b>：ここを下回ると赤（危険）</li>
+    </ul>
+
+    <h4>STEP 1：まずは「期首残高」を入れる</h4>
+    <ul>
+      <li><code>ODSOK_start</code> に、いまの口座残高を入れます（通帳やネットバンキングの残高）。</li>
+    </ul>
+
+    <h4>STEP 2：「MQ」と「F」を入れる（利益の土台）</h4>
+    <ul>
+      <li><code>MQ</code>（限界利益）を入れます。迷ったら「だいたいの粗利（売上−変動費）」でOKです。</li>
+      <li><code>F</code>（固定費）を入れます。毎月ほぼ必ず出ていくお金（家賃、人件費、通信費など）。</li>
+      <li>入れると <code>G</code>（利益）が自動で出ます（<code>G = MQ - F</code>）。</li>
+    </ul>
+
+    <h4>STEP 3：返済があるなら「R」を入れる</h4>
+    <ul>
+      <li><code>R</code> に、毎月の返済額（元本＋利息の合計）を入れます。ない月は0でOKです。</li>
+    </ul>
+
+    <h4>STEP 4：入金や支払いの"ズレ"があるなら「U/Z/K」を入れる</h4>
+    <ul>
+      <li>よく分からないうちは、全部0でもOKです。</li>
+      <li><code>U</code>：売上は立ったのに、まだ入金されていない分（売掛金）</li>
+      <li><code>Z</code>：先に払った・先に買った分（在庫や前払いなど）</li>
+      <li><code>K</code>：まだ払っていない分（買掛金）</li>
+      <li>入れると <code>W</code> が自動で出ます（<code>W = U + Z - K</code>）。</li>
+    </ul>
+
+    <h4>STEP 5：今月の「戦略投資（SS）」を入れる</h4>
+    <ul>
+      <li><code>SS</code> に、将来のために今月あえて使うお金（広告、採用、設備など）を入れます。ない月は0でOKです。</li>
+    </ul>
+
+    <h4>STEP 6：安全ライン（固定費×何ヶ月）を決める</h4>
+    <ul>
+      <li>安全ライン倍率（例：2）を入れます（固定費2ヶ月分を下回らないようにする）。</li>
+    </ul>
+
+    <h4>STEP 7：最後に"赤か緑か"を見る</h4>
+    <ul>
+      <li><b>期末残高が安全ライン以上</b>なら緑（ひとまずOK）</li>
+      <li><b>安全ラインを下回る</b>なら赤（要注意）</li>
+    </ul>
+  </details>
+
+  <!-- 迷ったら思想のページに戻る -->
+  <details class="phasex-philosophy">
+    <summary>🔖 迷ったら「思想のページ」に戻る</summary>
+
+    <div class="philosophy-callout">
+      数字が合わない・意味が分からない・不安が出たとき、<b>その場で判断しない</b>。<br>
+      式に戻る。式が迷ったら、Notion（思想）に戻る。<b>島を作らない。</b>
+    </div>
+
+    <h4>🕐 迷ったら最初にやること（30秒）</h4>
+    <ol>
+      <li>今見ている画面で「分からない」項目を <b>1つだけ</b> 決める
+        <ul style="margin-top:4px;">
+          <li>例：U が何か分からない</li>
+          <li>例：W がプラスで良いのか不安</li>
+          <li>例：CFがプラスなのに残高が減る理由が分からない</li>
+        </ul>
+      </li>
+      <li>思想の正本ページへ飛ぶ（Notion）<br>
+        <span style="font-size:11px;color:#777;">💰 CF-STRAC表 研究ノート｜第4回ポートアイランドMG</span>
+      </li>
+    </ol>
+
+    <h4>📐 STEP 1：式で「どこが原因か」を分ける</h4>
+    <table style="width:100%;font-size:12px;border-collapse:collapse;margin:4px 0 10px;">
+      <tbody>
+        <tr style="background:#f5f5f5;"><td style="padding:5px 8px;font-family:monospace;">G = MQ − F</td><td style="padding:5px 8px;color:#555;">利益の段</td></tr>
+        <tr><td style="padding:5px 8px;font-family:monospace;">W = U + Z − K</td><td style="padding:5px 8px;color:#555;">運転資金の段</td></tr>
+        <tr style="background:#f5f5f5;"><td style="padding:5px 8px;font-family:monospace;">CF = G − R + W + SS</td><td style="padding:5px 8px;color:#555;">現金の増減の段</td></tr>
+        <tr><td style="padding:5px 8px;font-family:monospace;">C末 = C首 + CF</td><td style="padding:5px 8px;color:#555;">口座残高の段</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:#444;margin:0 0 10px;">「分からない」が起きた式の段を特定する。<br>例：残高が減る → まず CF がマイナスか、C首が違うかを見る。</p>
+
+    <h4>💡 STEP 2：「黒字なのに現金がない」はだいたい W の話</h4>
+    <ul>
+      <li>売上はあるのに入金が遅い → <code>U</code>（売掛）が増えている</li>
+      <li>先に払った・在庫を持った → <code>Z</code> が増えている</li>
+      <li>支払いをまだしていない → <code>K</code> が増えている</li>
+    </ul>
+
+    <h4>📝 STEP 3：数字を"ストーリー"に戻す</h4>
+    <p style="font-size:12px;color:#444;margin:0 0 6px;">Notion上に次の3点を短く書く（箇条書きでOK）：</p>
+    <ul>
+      <li>今月いちばん効いた要因は何か（R / W / SS のどれ？）</li>
+      <li>その要因は「一時的」か「毎月続く」か</li>
+      <li>どう動けば改善するか（例：回収を早める＝U を減らす）</li>
+    </ul>
+
+    <h4>🔧 シミュレーターへの反映ルール</h4>
+    <ul>
+      <li>最初は <code>U / Z / K / SS</code> を全部0にして、<code>G</code> と <code>R</code> だけで骨格を見る</li>
+      <li>次に「1項目だけ」足す（例：売掛が増えた月だけ U を入れる）</li>
+      <li>一度に全部入れない（原因が混ざる）</li>
+    </ul>
+
+    <h4>🚨 相談モードに切り替えるタイミング</h4>
+    <div style="background:#fff3e0;border-left:3px solid #FF9800;padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;margin-bottom:4px;">
+      次のどれかに当てはまったら、シミュレーター内で悩まず Notion で対話してから進める：
+      <ul style="margin:6px 0 0 18px;">
+        <li>CF の符号（プラス/マイナス）に納得できない</li>
+        <li>W のプラス/マイナスが直感と逆</li>
+        <li>「黒字なのに不安」が消えない</li>
+        <li>入力した数字の根拠を説明できない</li>
+      </ul>
+    </div>
+
+    <p style="font-size:12px;font-style:italic;color:#777;margin:8px 0 0;">
+      思想の正本：💰 CF-STRAC表 研究ノート｜第4回ポートアイランドMG
+    </p>
+  </details>
+
+  <!-- 安全ラインアラート -->
+  <div id="px-alert" style="display:none;padding:10px 16px;border-left:4px solid #F44336;border-radius:0 6px 6px 0;margin-bottom:1rem;font-size:13px;font-weight:600;"></div>
+
+  <!-- 2カラム: 入力 ＋ 結果 -->
+  <div class="arrows-input-grid" style="margin-bottom:1.5rem;">
+
+    <!-- 左: 入力 -->
+    <div class="card">
+      <div class="card-title">入力パラメータ（万円）</div>
+
+      <table class="summary-table" style="width:100%;">
+        <thead>
+          <tr><th style="width:44%;">項目</th><th>記号</th><th>入力値</th><th>備考</th></tr>
+        </thead>
+        <tbody>
+          <tr style="background:#E8F5E9;">
+            <td><strong>限界利益</strong></td><td>MQ</td>
+            <td><input type="number" id="px-in-mq" value="0" step="1" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">売上−変動費</td>
+          </tr>
+          <tr>
+            <td><strong>固定費</strong></td><td>F</td>
+            <td><input type="number" id="px-in-f" value="0" step="1" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">人件費・賃料等</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td colspan="2">　→ 利益 G = MQ − F</td>
+            <td colspan="2" id="px-g-display" style="font-weight:700;color:#1a237e;">—</td>
+          </tr>
+          <tr>
+            <td><strong>返済額</strong></td><td>R</td>
+            <td><input type="number" id="px-in-r" value="0" step="1" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">借入元利金</td>
+          </tr>
+
+          <tr style="background:#FFF8E1;">
+            <td colspan="4" style="padding:6px 8px;font-size:12px;font-weight:600;color:#F57F17;">運転資金増分 W = U + Z − K</td>
+          </tr>
+          <tr>
+            <td>売上債権増分</td><td>U</td>
+            <td><input type="number" id="px-in-u" value="0" step="1" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">カード・保険ラグ等</td>
+          </tr>
+          <tr>
+            <td>固定費等増分</td><td>Z</td>
+            <td><input type="number" id="px-in-z" value="0" step="1" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">在庫・前払等</td>
+          </tr>
+          <tr>
+            <td>買入債務増分</td><td>K</td>
+            <td><input type="number" id="px-in-k" value="0" step="1" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">仕入・支払遅延</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td colspan="2">　→ W = U + Z − K</td>
+            <td colspan="2" id="px-w-display" style="font-weight:700;color:#1a237e;">—</td>
+          </tr>
+
+          <tr>
+            <td><strong>戦略投資</strong></td><td>SS</td>
+            <td><input type="number" id="px-in-ss" value="0" step="1" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">先行投資・設備等</td>
+          </tr>
+
+          <tr style="background:#E3F2FD;">
+            <td colspan="4" style="padding:6px 8px;font-size:12px;font-weight:600;color:#1565C0;">口座残高</td>
+          </tr>
+          <tr>
+            <td>期首口座残高</td><td>C首</td>
+            <td><input type="number" id="px-in-start" value="0" step="10" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">万円</td>
+          </tr>
+          <tr>
+            <td>安全ライン倍率</td><td>—</td>
+            <td><input type="number" id="px-in-safety" value="2" step="0.5" min="1" max="6" style="width:80px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;text-align:right;"></td>
+            <td style="font-size:11px;color:#777;">固定費 × ○ヶ月</td>
+          </tr>
+        </tbody>
+      </table>
+    </div><!-- /入力カード -->
+
+    <!-- 右: 出力 -->
+    <div class="card">
+      <div class="card-title">計算結果</div>
+
+      <!-- 信号機 3枚 -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;">
+        <div class="signal-card signal-yellow" id="px-card-cf" style="padding:10px;">
+          <div class="signal-label">月次CF</div>
+          <div class="signal-value" id="px-cf-val" style="font-size:16px;">—</div>
+        </div>
+        <div class="signal-card signal-yellow" id="px-card-end" style="padding:10px;">
+          <div class="signal-label">期末残高</div>
+          <div class="signal-value" id="px-end-val" style="font-size:16px;">—</div>
+        </div>
+        <div class="signal-card signal-green" id="px-card-fmc" style="padding:10px;">
+          <div class="signal-label">fmC%（資金効率）</div>
+          <div class="signal-value" id="px-fmc-val" style="font-size:16px;">—</div>
+        </div>
+      </div>
+
+      <!-- 内訳テーブル -->
+      <table class="summary-table" style="width:100%;">
+        <tbody>
+          <tr>
+            <td>限界利益 MQ</td>
+            <td class="text-right" id="px-g-mq" style="font-weight:600;">—</td>
+          </tr>
+          <tr>
+            <td>固定費 F</td>
+            <td class="text-right neg" id="px-g-f">—</td>
+          </tr>
+          <tr style="border-top:1px solid #ddd;">
+            <td><strong>利益 G = MQ − F</strong></td>
+            <td class="text-right" id="px-g-val" style="font-weight:700;">—</td>
+          </tr>
+          <tr>
+            <td>返済 R</td>
+            <td class="text-right neg" id="px-r-val">—</td>
+          </tr>
+          <tr>
+            <td>運転資金増分 W</td>
+            <td class="text-right" id="px-w-val">—</td>
+          </tr>
+          <tr>
+            <td>戦略投資 SS</td>
+            <td class="text-right" id="px-ss-val">—</td>
+          </tr>
+          <tr class="highlight-row">
+            <td><strong>月次CF</strong></td>
+            <td class="text-right" id="px-cf-val2" style="font-weight:700;">—</td>
+          </tr>
+          <tr style="background:#e3f2fd;">
+            <td>期首残高 C首</td>
+            <td class="text-right" id="px-start-val">—</td>
+          </tr>
+          <tr class="highlight-row" style="background:#e8f5e9;">
+            <td><strong>期末残高 C末</strong></td>
+            <td class="text-right" id="px-end-val2" style="font-weight:700;">—</td>
+          </tr>
+          <tr style="background:#fff3e0;">
+            <td>安全ライン（固定費×倍率）</td>
+            <td class="text-right" id="px-safe-val" style="color:#E65100;font-weight:600;">—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 収支分岐点（将来実装プレースホルダー） -->
+      <div style="margin-top:1rem;padding:10px 14px;background:#f5f5f5;border-radius:6px;border-left:3px solid #bdbdbd;">
+        <p style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;">📐 収支分岐点（次バージョンで実装）</p>
+        <p style="font-size:11px;color:#888;margin:2px 0;">fmC% = CF / MQ × 100　← 入力値から計算済み（右上 fmC% 参照）</p>
+        <p style="font-size:11px;color:#888;margin:2px 0;">収支分岐点 PQ = F / (P − V)　← 単価・変動費率が確定したら追加</p>
+      </div>
+
+      <!-- 検算メモ -->
+      <div style="margin-top:8px;padding:8px 12px;background:#FFF9C4;border-radius:6px;font-size:11px;color:#555;">
+        💡 検算例: MQ=697万, F=223万 → G=474万, R=W=SS=0 → CF=474万, fmC%=68%
+      </div>
+    </div><!-- /出力カード -->
+
+  </div><!-- /.arrows-input-grid -->
+
+</div><!-- /.arrows-content -->
+</div><!-- /#main-tab-phasex -->
+
+<script>
+function toggleRentTable() {
+  const body  = document.getElementById('rent-body');
+  const chev  = document.getElementById('rent-chevron');
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+// ── メインタブ切替 ─────────────────────────────────
+let phase2Initialized = false;
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.main-tab-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const targetId = e.target.dataset.maintab;
+      document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.main-tab-content').forEach(c => {
+        c.classList.remove('active');
+        c.style.display = 'none';
+      });
+      e.target.classList.add('active');
+      const panel = document.getElementById(targetId);
+      if (panel) { panel.classList.add('active'); panel.style.display = 'block'; }
+
+      // Phase2 タブが開かれたとき初期化
+      if (targetId === 'main-tab-arrows' && typeof Phase2 !== 'undefined') {
+        Phase2.init();
+      }
+      // Phase3 タブが開かれたとき初期化
+      if (targetId === 'main-tab-makiko' && typeof Phase3 !== 'undefined') {
+        Phase3.init();
+      }
+      // PhaseX タブが開かれたとき初期化
+      if (targetId === 'main-tab-phasex' && typeof PhaseX !== 'undefined') {
+        PhaseX.init();
+      }
+    });
+  });
+
+  // Phase1タブを初期表示
+  const p1 = document.getElementById('main-tab-building');
+  if (p1) p1.style.display = 'block';
+
+  // スライダー表示同期（Phase2入力用）
+  function bindPhase2Display(sliderId, dispId, formatter) {
+    const sl = document.getElementById(sliderId);
+    if (sl) sl.addEventListener('input', e => {
+      const disp = document.getElementById(dispId);
+      if (disp) disp.textContent = formatter(e.target.value);
+    });
+  }
+  bindPhase2Display('s2-price-sl',   's2-price-disp',   v => `¥${parseInt(v).toLocaleString()}`);
+  bindPhase2Display('s2-q-sl',       's2-q-disp',       v => `${v}人`);
+  bindPhase2Display('s2-days-sl',    's2-days-disp',    v => `${v}日`);
+  // kintone は3プラン制のため個別スライダー表示バインドなし（phase2.js内で管理）
+  bindPhase2Display('s2-target-sl',  'disp-target',     v => `¥${parseInt(v).toLocaleString()}`);
+});
+</script>
+
+<!-- JS 読み込み順: config → calculator → scenarios → charts → app → phase2 -->
+<script src="js/config.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/scenarios.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+<script src="js/phase2.js"></script>
+<script src="js/phase3.js"></script>
+<script src="js/phasex.js"></script>
+
+<!-- ██ GUIDE OVERLAY + SIDE PANEL ████████████████████ -->
+<div id="guide-overlay"></div>
+
+<div id="guide-panel" role="dialog" aria-modal="true" aria-label="シミュレーターガイド">
+  <div class="guide-panel-header">
+    <h2>🧭 シミュレーターの使い方ガイド</h2>
+    <button class="guide-close-btn" id="guide-close-btn" aria-label="閉じる">✕</button>
+  </div>
+  <div class="guide-panel-body">
+
+    <!-- セクション1: 全体の考え方 -->
+    <h3>🧭 シミュレーター全体の考え方</h3>
+    <p>このシミュレーターは<strong>「3本の矢で家族全体のCFをプラスに保てるか？」</strong>を検証するツールです。</p>
+    <div class="guide-formula">
+      3矢合計 月次CF = ①ビルCF ＋ ②鍼灸院CF ＋ ③kintone外販 − 給与・社保
+    </div>
+    <p>①ビルは固定費が大きく初期は赤字（▲152万/月）。これを②③で埋めて、家族の手取り90万/月を確保しつつ、全体をプラスにできるか？という設計です。</p>
+
+    <!-- セクション2: 数字を入れていく順番 -->
+    <h3>🔢 数字を入れていく順番</h3>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <span class="step-num">1</span>
+        <div>
+          <strong>ビル（矢①）は「所与」として確定させる</strong>
+          <p>建設費・金利・返済年数は融資条件で決まるので最初に固定。セットA（実質）で見るのが基本。</p>
+        </div>
+      </div>
+      <div class="guide-step">
+        <span class="step-num">2</span>
+        <div>
+          <strong>給与設計を先に決める</strong>
+          <p>真紀子・彰宏の報酬配分は「家族がいくら必要か」から逆算。現状：合計90万/月＋社保。</p>
+        </div>
+      </div>
+      <div class="guide-step">
+        <span class="step-num">3</span>
+        <div>
+          <strong>鍼灸院（矢②）のパラメータを入れる</strong>
+          <p>単価(P) × 患者数(Q) × 稼働日数 が売上の3変数。経費は現実値を入れる。</p>
+        </div>
+      </div>
+      <div class="guide-step">
+        <span class="step-num">4</span>
+        <div>
+          <strong>kintone（矢③）は感度を見る</strong>
+          <p>最初は0社でOK。「Bプラン5社取れたら？」などをスライダーで試す。</p>
+        </div>
+      </div>
+      <div class="guide-step">
+        <span class="step-num">5</span>
+        <div>
+          <strong>逆算パネルで答え合わせ</strong>
+          <p>目標月次CFスライダーを動かして「最低ラインはどこか」を確認。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- セクション3: 逆算パネルのロジック -->
+    <h3>📐 逆算パネルのロジック</h3>
+    <p><strong>「目標CFを達成するために、鍼灸院で何人診ればいいか？kintoneで何社必要か？」</strong>を逆算するパネルです。</p>
+    <ol>
+      <li><strong>ビルの不足額を確定</strong>（▲152万/月 = 固定）</li>
+      <li><strong>給与・社保を足す</strong>（90万 + 社保 = 固定支出）</li>
+      <li><strong>不足の合計 − kintone収入 = 鍼灸院が埋めるべき額</strong></li>
+      <li><strong>必要売上 → 1日必要売上 → 必要患者数</strong> に変換</li>
+    </ol>
+    <div class="guide-highlight">
+      現在のパラメータでは「目標月次CF ¥0」で <strong>25人/日が損益分岐点</strong>
+    </div>
+
+    <!-- セクション4: 意識すべきKPI -->
+    <h3>🎯 意識すべきKPI（優先順）</h3>
+    <table class="guide-table">
+      <thead>
+        <tr><th>優先</th><th>KPI</th><th>見る場所</th><th>なぜ重要か</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><strong>3矢合計 月次CF</strong></td><td>統合ダッシュボード右端</td><td>マイナス＝家計が回らない</td></tr>
+        <tr><td>2</td><td><strong>1日患者数(Q)</strong></td><td>逆算パネル</td><td>最もコントロールできる変数</td></tr>
+        <tr><td>3</td><td><strong>施術単価(P)</strong></td><td>矢②パラメータ</td><td>Qを増やせない時の第2レバー</td></tr>
+        <tr><td>4</td><td><strong>家族手取り/月</strong></td><td>2社収支サマリー最下行</td><td>生活の最終確認</td></tr>
+        <tr><td>5</td><td><strong>空室率</strong></td><td>ビルタブ</td><td>1室空き＝月16〜48万の影響</td></tr>
+      </tbody>
+    </table>
+
+    <!-- セクション5: 鍼灸院での考え方 -->
+    <h3>🏥 鍼灸院での考え方</h3>
+    <p>鍼灸院（矢②）は<strong>「ビルの赤字を埋める主エンジン」</strong>です。</p>
+    <ul>
+      <li><strong>「1日25人」が損益分岐点</strong> — 余裕を持つなら1日28〜30人を安定ラインに</li>
+      <li><strong>単価アップで必要患者数が減る</strong> — 7,500円→8,000円で約2人/日少なくて済む</li>
+      <li><strong>スタッフ人件費150万が最大の固定費</strong> — 増員＝天井↑だが分岐点も↑</li>
+      <li><strong>内装ローンは10年で消える</strong> — 完済後は月18.4万改善</li>
+    </ul>
+
+    <!-- セクション6: kintone外販の効果 -->
+    <h3>💻 kintone外販が安定するとどこに効くか</h3>
+    <p>kintone（矢③）は<strong>「鍼灸院への依存度を下げる安全弁」</strong>です。</p>
+    <div class="guide-effects">
+      <div class="guide-effect">
+        <strong>① 必要患者数が減る</strong>
+        <p>Bプラン×5社＝月10万 → 1日あたり約0.6人分の余裕</p>
+      </div>
+      <div class="guide-effect">
+        <strong>② 3矢合計CFが底上げ</strong>
+        <p>経費ほぼゼロなので売上≒利益。10社で月20万、20社で月40万がそのまま加算</p>
+      </div>
+      <div class="guide-effect">
+        <strong>③ リスクヘッジ</strong>
+        <p>ビル1室空き（▲16万）→ kintone 8社で相殺。患者減のダメージも軽減</p>
+      </div>
+      <div class="guide-effect">
+        <strong>④ 長期の加速装置</strong>
+        <p>35年目以降ビルCFが年+1,946万にジャンプ。kintone月50万あれば年間+2,546万の体制に</p>
+      </div>
+    </div>
+    <div class="guide-summary">
+      💡 kintoneは「今すぐ必須」ではないが、育てるほど鍼灸院の現場プレッシャーが減り、全体の安定性が増す。
+    </div>
+
+  </div><!-- /.guide-panel-body -->
+</div><!-- /#guide-panel -->
+
+<script>
+// ── ガイドパネル開閉 ──────────────────────────────
+(function () {
+  const panel   = document.getElementById('guide-panel');
+  const overlay = document.getElementById('guide-overlay');
+  const openBtn = document.getElementById('guide-open-btn');
+  const closeBtn = document.getElementById('guide-close-btn');
+
+  function openGuide() {
+    panel.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGuide() {
+    panel.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  openBtn.addEventListener('click', openGuide);
+  closeBtn.addEventListener('click', closeGuide);
+  overlay.addEventListener('click', closeGuide);
+
+  // ESC キーでも閉じる
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && panel.classList.contains('open')) closeGuide();
+  });
+})();
+</script>
+
+</body>
+</html>
